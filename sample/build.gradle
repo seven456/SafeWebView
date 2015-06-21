@@ -1,0 +1,30 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileOptions.encoding = "UTF-8"
+
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 17
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            proguardFile 'proguard-android.txt'
+            minifyEnabled true
+            shrinkResources true
+        }
+    }
+}
+
+dependencies {
+    //compile 'cn.pedant.safewebviewbridge:library:1.4'
+    compile project(':library')
+}

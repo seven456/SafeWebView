@@ -1,0 +1,22 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileOptions.encoding = "UTF-8"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 17
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
+
+dependencies {
+    // compile 'com.google.code.gson:gson:2.3'
+}
+
+// apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SafeWebView</title>
+  <meta name="author" content="zhangguojun">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1, target-densitydpi=medium-dpi, user-scalable=no">
+  <style>
+      .entry{
+          -webkit-padding-start: 30px;
+      }
+      .entry li {
+          line-height: 29px;
+          margin-left: -10px;
+      }
+      .entry li div{
+          margin-right: 10px;
+          padding-left: 8px;
+          padding-top: 8px;
+          padding-bottom: 8px;
+          background: #555555;
+          color: white;
+          word-break: break-all;
+          -ms-word-wrap: break-word;
+          word-wrap: break-word;
+          line-height: 15px;
+          font-size: 10pt;
+      }
+      .entry li button{
+          margin-top: 5px;
+          width: 60px;
+          height: 35px;
+          color: #111111;
+      }
+  </style>
+</head>
+
+<body>
+<div class="blog-header">
+  <h3>Java Interface 接口测试</h3>
+</div>
+<ul class="entry">
+    <li>
+        气泡提示<br/>
+        代码：<br/>
+        <div>
+            Android.toast('我是气泡');
+        </div>
+        <button onclick="Android.toast('我是气泡');">测试</button>
+    </li>
+
+    <br/>
+    <li>
+        测试代码执行时间<br/>
+        代码：<br/>
+        <div>
+            Android.testLossTime(new Date().getTime());
+        </div>
+        <button onclick="Android.testLossTime(new Date().getTime());">测试</button>
+    </li>
+
+    <br/>
+    <li>
+        异步回调，传入js函数到Java方法,设定3秒后回调<br/>
+        代码：<br/>
+        <div>
+            Android.delayJsCallBack(3 * 1000, 'call back haha', function (msg) {
+                Android.toast(msg);
+            });
+        </div>
+        <button onclick="Android.delayJsCallBack(3 * 1000, 'call back haha', function (msg) {Android.toast(msg);});">测试</button>
+    </li>
+</ul>
+
+</body>
+</html>
