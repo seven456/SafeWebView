@@ -79,10 +79,6 @@ SafeWebView
         ...
     }
 
-
-
-更多实现细节见: http://www.pedant.cn/2014/07/04/webview-js-java-interface-research/
-
 ### 发布时防混淆
 发布时需在你的混淆配置加入像下面这样的代码，注意返回到页面的自定义Java类以及注入类都要**换成你项目中实际使用类名**:
 
