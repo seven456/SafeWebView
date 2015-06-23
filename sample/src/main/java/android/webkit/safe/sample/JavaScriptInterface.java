@@ -15,7 +15,6 @@ import android.widget.Toast;
 
 import android.webkit.safe.JsCallback;
 
-//HostJsScope中需要被JS调用的函数，必须定义成public static，且必须包含WebView这个参数
 public class JavaScriptInterface {
     private WebView mWebView;
 

@@ -109,7 +109,7 @@ public class JsCallJava {
         return message.startsWith(MSG_PROMPT_HEADER);
     }
 
-    public String call(WebView webView, String jsonStr) {
+    public String call (WebView webView, String jsonStr) {
         if (!TextUtils.isEmpty(jsonStr)) {
             try {
                 jsonStr = jsonStr.substring(MSG_PROMPT_HEADER.length());
