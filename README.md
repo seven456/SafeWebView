@@ -15,7 +15,7 @@ SafeWebView
 
 ## 用法
 
-### 初始化Webview WebSettings时允许js脚本执行，SafeWebView内部重新了addJavascriptInterface和setWebChromeClient方法：
+### 初始化Webview WebSettings时允许js脚本执行，SafeWebView（自己的WebView可以继承这个类）内部重写了addJavascriptInterface和setWebChromeClient方法：
 
     WebView wv = new SafeWebView(this);
     WebSettings ws = wv.getSettings();

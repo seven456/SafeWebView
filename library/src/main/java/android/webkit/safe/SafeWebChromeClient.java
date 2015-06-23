@@ -29,6 +29,9 @@ public class SafeWebChromeClient extends WebChromeClient {
 
     @Override
     public void onProgressChanged (WebView view, int newProgress) {
+        if (mJsCallJava == null) {
+            return;
+        }
         //为什么要在这里注入JS
         //1 OnPageStarted中注入有可能全局注入不成功，导致页面脚本上所有接口任何时候都不可用
         //2 OnPageFinished中注入，虽然最后都会全局注入成功，但是完成时间有可能太晚，当页面在初始化调用接口函数时会等待时间过长
@@ -48,6 +51,9 @@ public class SafeWebChromeClient extends WebChromeClient {
 
     @Override
     public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
+        if (mJsCallJava == null) {
+            return false;
+        }
         if (mJsCallJava.isSafeWebViewMsg(message)) {
             result.confirm(mJsCallJava.call(view, message));
             return true;

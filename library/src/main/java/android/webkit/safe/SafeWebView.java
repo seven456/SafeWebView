@@ -32,7 +32,7 @@ public class SafeWebView extends WebView {
     }
 
     /**
-     * 虽然android17以及以上版本的addJavascriptInterface方法解决了安全问题，但为了支持“网页能将JS函数传到Java层”功能，统一采用本地JS注入的方式解决Bridge问题；
+     * 虽然android4.2.2及以上版本的addJavascriptInterface方法解决了安全问题，但为了支持“网页能将JS函数传到Java层”功能，统一采用本地JS注入的方式解决Bridge问题；
      */
     @Override
     public void addJavascriptInterface(Object interfaceObj, String interfaceName) {
