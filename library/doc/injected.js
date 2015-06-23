@@ -40,7 +40,7 @@ javascript: (function(b) {
     };
     Object.getOwnPropertyNames(a).forEach(function(d) {
         var c = a[d];
-        if (typeofc === "function" && d !== "callback") {
+        if (typeof c === "function" && d !== "callback") {
             a[d] = function() {
                 returnc.apply(a, [d].concat(Array.prototype.slice.call(arguments, 0)))
             }
