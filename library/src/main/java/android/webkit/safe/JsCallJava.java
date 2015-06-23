@@ -31,8 +31,8 @@ public class JsCallJava {
             mInterfacedName = interfaceName;
             mMethodsMap = new HashMap<String, Method>();
             //获取自身声明的所有方法（包括public private protected）， getMethods会获得所有继承与非继承的方法
-            Method[] methods = mInterfaceObj.getClass().getMethods();
-            // js脚本备份：./library/doc/injected.js
+            Method[] methods = mInterfaceObj.getClass().getDeclaredMethods(); // 不包括继承类的方法;
+            // 以下拼接的js脚本备份路径：./library/doc/injected.js
             StringBuilder sb = new StringBuilder("javascript:(function(b){console.log(\"");
             sb.append(mInterfacedName);
             sb.append(" initialization begin\");var a={queue:[],callback:function(){var d=Array.prototype.slice.call(arguments,0);var c=d.shift();var e=d.shift();this.queue[c].apply(this,d);if(!e){delete this.queue[c]}}};");

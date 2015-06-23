@@ -29,6 +29,7 @@ public class SafeWebView extends WebView {
     public SafeWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
         removeSearchBoxJavaBridge();
+        getSettings().setAllowFileAccess(false); // 是否允许WebView使用File协议，WebView跨源攻击漏洞，http://blogs.360.cn/360mobile/2014/09/22/webview%E8%B7%A8%E6%BA%90%E6%94%BB%E5%87%BB%E5%88%86%E6%9E%90/
     }
 
     /**
