@@ -8,11 +8,11 @@ javascript: (function(b) {
             var e = d.shift();
             this.queue[c].apply(this, d);
             if (!e) {
-                deletethis.queue[c]
+                delete this.queue[c]
             }
         }
     };
-    a.delayJsCallBack = a.equals = a.getClass = a.hashCode = a.notify = a.notifyAll = a.testLossTime = a.toString = a.toast = a.wait = a.wait = a.wait = function() {
+    a.delayJsCallBack = a.testLossTime = a.toast = function() {
         var f = Array.prototype.slice.call(arguments, 0);
         if (f.length < 1) {
             throw "Android call error, message:miss method name"
@@ -36,13 +36,13 @@ javascript: (function(b) {
         if (g.code != 200) {
             throw "Android call error, code:" + g.code + ", message:" + g.result
         }
-        returng.result
+        return g.result
     };
     Object.getOwnPropertyNames(a).forEach(function(d) {
         var c = a[d];
         if (typeof c === "function" && d !== "callback") {
             a[d] = function() {
-                returnc.apply(a, [d].concat(Array.prototype.slice.call(arguments, 0)))
+                return c.apply(a, [d].concat(Array.prototype.slice.call(arguments, 0)))
             }
         }
     });
