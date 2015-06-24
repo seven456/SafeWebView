@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 public class SafeWebView extends WebView {
     private Object mInterfaceObj;
     private String mInterfaceName;
+    private SafeWebChromeClient mWebChromeClient;
 
     public SafeWebView(Context context) {
         this(context, null);
@@ -39,14 +40,23 @@ public class SafeWebView extends WebView {
     public void addJavascriptInterface(Object interfaceObj, String interfaceName) {
         mInterfaceObj = interfaceObj;
         mInterfaceName = interfaceName;
+        if (mWebChromeClient != null) {
+            setWebChromeClient(mWebChromeClient);
+        }
     }
 
     @Override
     public void setWebChromeClient(WebChromeClient client) {
         if (client instanceof SafeWebChromeClient) {
-            ((SafeWebChromeClient) client).addJavascriptInterface(mInterfaceObj, mInterfaceName);
+            if (mInterfaceObj != null) {
+                ((SafeWebChromeClient) client).addJavascriptInterface(mInterfaceObj, mInterfaceName);
+                super.setWebChromeClient(client);
+            } else {
+                mWebChromeClient = (SafeWebChromeClient) client;
+            }
+        } else {
+            super.setWebChromeClient(client);
         }
-        super.setWebChromeClient(client);
     }
 
     @Override
