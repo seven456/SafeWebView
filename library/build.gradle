@@ -14,7 +14,7 @@ android {
         abortOnError false
     }
 
-    // defaultPublishConfig "debug"
+    // defaultPublishConfig "release" // 当为“release”时，BuildConfig.DEBUG = false;
 }
 
 // apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'
