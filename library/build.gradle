@@ -13,10 +13,8 @@ android {
     lintOptions {
         abortOnError false
     }
-}
 
-dependencies {
-    // compile 'com.google.code.gson:gson:2.3'
+    // defaultPublishConfig "debug"
 }
 
 // apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'

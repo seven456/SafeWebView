@@ -5,6 +5,7 @@ import android.util.Log;
 import android.webkit.WebView;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Method;
@@ -14,13 +15,15 @@ public class JsCallJava {
     private final static String TAG = "JsCallJava";
     private final static String RETURN_RESULT_FORMAT = "{\"code\": %d, \"result\": %s}";
     private static final String MSG_PROMPT_HEADER = "SafeWebView:";
+    private static final String KEY_OBJ = "obj";
     private static final String KEY_METHOD = "method";
     private static final String KEY_TYPES = "types";
     private static final String KEY_ARGS = "args";
+    private static final String[] IGNORE_UNSAFE_METHODS = {"getClass", "hashCode", "notify", "notifyAll", "equals", "toString", "wait"};
     private HashMap<String, Method> mMethodsMap;
+    private Object mInterfaceObj;
     private String mInterfacedName;
     private String mPreloadInterfaceJS;
-    private Object mInterfaceObj;
 
     public JsCallJava (Object interfaceObj, String interfaceName) {
         try {
@@ -30,10 +33,14 @@ public class JsCallJava {
             mInterfaceObj = interfaceObj;
             mInterfacedName = interfaceName;
             mMethodsMap = new HashMap<String, Method>();
-            //获取自身声明的所有方法（包括public private protected）， getMethods会获得所有继承与非继承的方法
-            Method[] methods = mInterfaceObj.getClass().getDeclaredMethods(); // 不包括继承类的方法;
-            // 以下拼接的js脚本备份路径：./library/doc/injected.js
-            StringBuilder sb = new StringBuilder("javascript:(function(b){console.log(\"");
+            // getMethods会获得所有继承与非继承的方法
+            Method[] methods = mInterfaceObj.getClass().getMethods();
+            // 拼接的js脚本可参照备份文件：./library/doc/injected.js
+            StringBuilder sb = new StringBuilder("javascript:(function(b){if(typeof(b.");
+            sb.append(mInterfacedName);
+            sb.append(")!='undefined'){console.log(\"");
+            sb.append(mInterfacedName);
+            sb.append(" is injected\");}else{console.log(\"");
             sb.append(mInterfacedName);
             sb.append(" initialization begin\");var a={queue:[],callback:function(){var d=Array.prototype.slice.call(arguments,0);var c=d.shift();var e=d.shift();this.queue[c].apply(this,d);if(!e){delete this.queue[c]}}};");
             for (Method method : methods) {
@@ -44,25 +51,21 @@ public class JsCallJava {
                 mMethodsMap.put(sign, method);
                 sb.append(String.format("a.%s=", method.getName()));
             }
-
             sb.append("function(){var f=Array.prototype.slice.call(arguments,0);if(f.length<1){throw\"");
             sb.append(mInterfacedName);
-            sb.append(" call error, message:miss method name\"}var e=[];for(var h=1;h<f.length;h++){var c=f[h];var j=typeof c;e[e.length]=j;if(j==\"function\"){var d=a.queue.length;a.queue[d]=c;f[h]=d}}var g=JSON.parse(prompt('");
+            sb.append(" call error, message:miss method name\"}var e=[];for(var h=1;h<f.length;h++){var c=f[h];var j=typeof c;e[e.length]=j;if(j==\"function\"){var d=a.queue.length;a.queue[d]=c;f[h]=d}}var k = new Date().getTime();var l = f.shift();var m=prompt('");
             sb.append(MSG_PROMPT_HEADER);
-            sb.append("'+JSON.stringify({");
-            sb.append(KEY_METHOD);
-            sb.append(":f.shift(),");
-            sb.append(KEY_TYPES);
-            sb.append(":e,");
-            sb.append(KEY_ARGS);
-            sb.append(":f})));if(g.code!=200){throw\"");
+            sb.append("'+JSON.stringify(");
+            sb.append(promptMsgFormat("'" + mInterfacedName + "'", "l", "e", "f"));
+            sb.append("));console.log(\"invoke \"+l+\", time: \"+(new Date().getTime()-k));var g=JSON.parse(m);if(g.code!=200){throw\"");
             sb.append(mInterfacedName);
             sb.append(" call error, code:\"+g.code+\", message:\"+g.result}return g.result};Object.getOwnPropertyNames(a).forEach(function(d){var c=a[d];if(typeof c===\"function\"&&d!==\"callback\"){a[d]=function(){return c.apply(a,[d].concat(Array.prototype.slice.call(arguments,0)))}}});b.");
             sb.append(mInterfacedName);
             sb.append("=a;console.log(\"");
             sb.append(mInterfacedName);
-            sb.append(" initialization end\")})(window);");
+            sb.append(" initialization end\")}})(window);");
             mPreloadInterfaceJS = sb.toString();
+            sb.setLength(0);
         } catch(Exception e){
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, "init js error:" + e.getMessage());
@@ -73,6 +76,14 @@ public class JsCallJava {
     private String genJavaMethodSign (Method method) {
         String sign = method.getName();
         Class[] argsTypes = method.getParameterTypes();
+        for (String ignoreMethod : IGNORE_UNSAFE_METHODS) {
+            if (ignoreMethod.equals(sign)) {
+                if (BuildConfig.DEBUG) {
+                    Log.w(TAG, "method(" + sign + ") is unsafe, will be pass");
+                }
+                return null;
+            }
+        }
         int len = argsTypes.length;
         for (int k = 0; k < len; k++) {
             Class cls = argsTypes[k];
@@ -100,23 +111,16 @@ public class JsCallJava {
         return mPreloadInterfaceJS;
     }
 
-    /**
-     * 是否是特殊类型的内部消息；
-     * @param message
-     * @return
-     */
-    public boolean isSafeWebViewMsg(String message) {
-        return message.startsWith(MSG_PROMPT_HEADER);
-    }
-
-    public String call (WebView webView, String jsonStr) {
-        if (!TextUtils.isEmpty(jsonStr)) {
+    public String call (WebView webView, JSONObject jsonObject) {
+        long time = 0;
+        if (BuildConfig.DEBUG) {
+            time = android.os.SystemClock.uptimeMillis();
+        }
+        if (jsonObject != null) {
             try {
-                jsonStr = jsonStr.substring(MSG_PROMPT_HEADER.length());
-                JSONObject callJson = new JSONObject(jsonStr);
-                String methodName = callJson.getString(KEY_METHOD);
-                JSONArray argsTypes = callJson.getJSONArray(KEY_TYPES);
-                JSONArray argsVals = callJson.getJSONArray(KEY_ARGS);
+                String methodName = jsonObject.getString(KEY_METHOD);
+                JSONArray argsTypes = jsonObject.getJSONArray(KEY_TYPES);
+                JSONArray argsVals = jsonObject.getJSONArray(KEY_ARGS);
                 String sign = methodName;
                 int len = argsTypes.length();
                 Object[] values = new Object[len];
@@ -149,7 +153,7 @@ public class JsCallJava {
 
                 // 方法匹配失败
                 if (currMethod == null) {
-                    return getReturn(jsonStr, 500, "not found method(" + sign + ") with valid parameters");
+                    return getReturn(jsonObject, 500, "not found method(" + sign + ") with valid parameters", time);
                 }
                 // 数字类型细分匹配
                 if (numIndex > 0) {
@@ -171,43 +175,73 @@ public class JsCallJava {
                     }
                 }
 
-                return getReturn(jsonStr, 200, currMethod.invoke(mInterfaceObj, values));
+                return getReturn(jsonObject, 200, currMethod.invoke(mInterfaceObj, values), time);
             } catch (Exception e) {
                 //优先返回详细的错误信息
                 if (e.getCause() != null) {
-                    return getReturn(jsonStr, 500, "method execute error:" + e.getCause().getMessage());
+                    return getReturn(jsonObject, 500, "method execute error:" + e.getCause().getMessage(), time);
                 }
-                return getReturn(jsonStr, 500, "method execute error:" + e.getMessage());
+                return getReturn(jsonObject, 500, "method execute error:" + e.getMessage(), time);
             }
         } else {
-            return getReturn(jsonStr, 500, "call data empty");
+            return getReturn(jsonObject, 500, "call data empty", time);
         }
     }
 
-    private String getReturn (String reqJson, int stateCode, Object result) {
+    private String getReturn (JSONObject reqJson, int stateCode, Object result, long time) {
         String insertRes;
         if (result == null) {
             insertRes = "null";
         } else if (result instanceof String) {
             result = ((String) result).replace("\"", "\\\"");
-            insertRes = "\"" + result + "\"";
-        }/* else if (!(result instanceof Integer)
-                && !(result instanceof Long)
-                && !(result instanceof Boolean)
-                && !(result instanceof Float)
-                && !(result instanceof Double)
-                && !(result instanceof JSONObject)) {    // 非数字或者非字符串的构造对象类型都要序列化后再拼接
-            if (mGson == null) {
-                mGson = new Gson();
-            }
-            insertRes = mGson.toJson(result);
-        }*/ else {  //数字直接转化
+            insertRes = "\"".concat(String.valueOf(result)).concat("\"");
+        } else { // 其他类型直接转换
             insertRes = String.valueOf(result);
+
+            // 兼容：如果在解决WebView注入安全漏洞时，js注入采用的是XXX:function(){return prompt(...)}的形式，函数返回类型包括：void、int、boolean、String；
+            // 在返回给网页（onJsPrompt方法中jsPromptResult.confirm）的时候强制返回的是String类型，所以在此将result的值加双引号兼容一下；
+            // insertRes = "\"".concat(String.valueOf(result)).concat("\"");
         }
         String resStr = String.format(RETURN_RESULT_FORMAT, stateCode, insertRes);
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, mInterfacedName + " call json: " + reqJson + " result:" + resStr);
+            Log.d(TAG, "call time: " + (android.os.SystemClock.uptimeMillis() - time) + ", request: " + reqJson + ", result:" + resStr);
         }
         return resStr;
+    }
+
+    private static String promptMsgFormat(String object, String method, String types, String args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append(KEY_OBJ).append(":").append(object).append(",");
+        sb.append(KEY_METHOD).append(":").append(method).append(",");
+        sb.append(KEY_TYPES).append(":").append(types).append(",");
+        sb.append(KEY_ARGS).append(":").append(args);
+        sb.append("}");
+        return sb.toString();
+    }
+
+    /**
+     * 是否是“Java接口类中方法调用”的内部消息；
+     * @param message
+     * @return
+     */
+    static boolean isSafeWebViewCallMsg(String message) {
+        return message.startsWith(MSG_PROMPT_HEADER);
+    }
+
+    static JSONObject getMsgJSONObject(String message) {
+        message = message.substring(MSG_PROMPT_HEADER.length());
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(message);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            jsonObject = new JSONObject();
+        }
+        return jsonObject;
+    }
+
+    static String getInterfacedName(JSONObject jsonObject) {
+        return jsonObject.optString(KEY_OBJ);
     }
 }

@@ -21,12 +21,12 @@ public class WebActivity extends Activity {
         WebSettings ws = wv.getSettings();
         ws.setJavaScriptEnabled(true);
         wv.addJavascriptInterface(new JavaScriptInterface(wv), "Android");
-        wv.setWebChromeClient(new InnerChromeClient());
+        wv.setWebChromeClient(new InnerWebChromeClient());
         wv.setWebViewClient(new InnerWebViewClient());
         wv.loadUrl("file:///android_asset/test.html");
     }
 
-    public class InnerChromeClient extends SafeWebChromeClient {
+    public class InnerWebChromeClient extends SafeWebChromeClient {
 
         @Override
         public void onProgressChanged (WebView view, int newProgress) {
