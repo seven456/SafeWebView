@@ -29,6 +29,7 @@ import java.util.Map;
 public class SafeWebView extends WebView {
     private static final String TAG = "SafeWebView";
     private Map<String, JsCallJava> mJsCallJavas;
+    private Map<Integer, String> mInjectJavaScripts;
     private SafeWebChromeClient mWebChromeClient;
     private SafeWebViewClient mWebViewClient;
 
@@ -101,6 +102,9 @@ public class SafeWebView extends WebView {
         if (mJsCallJavas != null) {
             mJsCallJavas.clear();
         }
+        if (mInjectJavaScripts != null) {
+            mInjectJavaScripts.clear();
+        }
         removeAllViews();
         //WebView中包含一个ZoomButtonsController，当使用web.getSettings().setBuiltInZoomControls(true);启用该设置后，用户一旦触摸屏幕，就会出现缩放控制图标。这个图标过上几秒会自动消失，但在3.0系统以上上，如果图标自动消失前退出当前Activity的话，就会发生ZoomButton找不到依附的Window而造成程序崩溃，解决办法很简单就是在Activity的ondestory方法中调用web.setVisibility(View.GONE);方法，手动将其隐藏，就不会崩溃了。在3.0一下系统上不会出现该崩溃问题，真是各种崩溃，防不胜防啊！
         setVisibility(View.GONE);
@@ -137,9 +141,28 @@ public class SafeWebView extends WebView {
         }
     }
 
+    /**
+     * 添加并注入JavaScript脚本（和“addJavascriptInterface”注入对象的注入时机一致，100%能注入成功）；
+     * 注意：为了做到能100%注入，需要在注入的js中自行判断对象是否已经存在（如：if (typeof(window.Android) = 'undefined')）；
+     * @param javaScript
+     */
+    public void addInjectJavaScript(String javaScript) {
+        if (mInjectJavaScripts == null) {
+            mInjectJavaScripts = new HashMap<Integer, String>();
+        }
+        mInjectJavaScripts.put(javaScript.hashCode(), javaScript);
+        injectExtraJavaScript();
+    }
+
     private void injectJavaScript() {
         for (Map.Entry<String, JsCallJava> entry : mJsCallJavas.entrySet()) {
             loadUrl(entry.getValue().getPreloadInterfaceJS());
+        }
+    }
+
+    private void injectExtraJavaScript() {
+        for (Map.Entry<Integer, String> entry : mInjectJavaScripts.entrySet()) {
+            loadUrl("javascript:" + entry.getValue());
         }
     }
 
@@ -155,6 +178,9 @@ public class SafeWebView extends WebView {
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "injectJavaScript, onPageStarted.url = " + view.getUrl());
                 }
+            }
+            if (mInjectJavaScripts != null) {
+                injectExtraJavaScript();
             }
             super.onPageStarted(view, url, favicon);
         }
@@ -172,6 +198,9 @@ public class SafeWebView extends WebView {
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "injectJavaScript, onProgressChanged.newProgress = " + newProgress + ", url = " + view.getUrl());
                 }
+            }
+            if (mInjectJavaScripts != null) {
+                injectExtraJavaScript();
             }
             super.onProgressChanged(view, newProgress);
         }
