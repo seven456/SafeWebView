@@ -51,7 +51,7 @@ public class SafeWebView extends WebView {
      * 1、在第一次loadUrl之前注入JS（在addJavascriptInterface里面注入即可）；
      * 2、在webViewClient.onPageStarted中都注入JS；
      * 3、在webChromeClient.onProgressChanged中都注入JS，并且不能通过自检查（onJsPrompt里面判断）JS是否注入成功来减少注入JS的次数，因为网页中的JS可以同时打开多个url导致无法控制检查的准确性；
-     * 4、注入的JS中已经在脚本中检查注入的对象是否已经存在，避免注入对象被重新赋值导致网页引用该对象的方法时发生异常；
+     * 4、注入的JS中已经在脚本（./library/doc/notRepeat.js）中检查注入的对象是否已经存在，避免注入对象被重新赋值导致网页引用该对象的方法时发生异常；
      *
      * @deprecated Android4.2.2及以上版本的addJavascriptInterface方法已经解决了安全问题，如果不使用“网页能将JS函数传到Java层”功能，不建议使用该类，毕竟系统的JS注入效率才是最高的；
      */
@@ -119,7 +119,10 @@ public class SafeWebView extends WebView {
 
     @Override
     public void loadUrl(String url) {
-        loadUrl(url, null);
+        if (mJsCallJavas == null) {
+            setClient();
+        }
+        super.loadUrl(url);
     }
 
     @Override
@@ -156,14 +159,48 @@ public class SafeWebView extends WebView {
 
     private void injectJavaScript() {
         for (Map.Entry<String, JsCallJava> entry : mJsCallJavas.entrySet()) {
-            loadUrl(entry.getValue().getPreloadInterfaceJS());
+            this.loadUrl(buildNotRepeatInjectJS(entry.getKey(), entry.getValue().getPreloadInterfaceJS()));
         }
     }
 
     private void injectExtraJavaScript() {
         for (Map.Entry<Integer, String> entry : mInjectJavaScripts.entrySet()) {
-            loadUrl("javascript:" + entry.getValue());
+            this.loadUrl(buildTryCatchInjectJS(entry.getValue()));
         }
+    }
+
+    /**
+     * 构建一个“不会重复注入”的js脚本；
+     * @param key
+     * @param js
+     * @return
+     */
+    public String buildNotRepeatInjectJS(String key, String js) {
+        String obj = String.format("__injectFlag_%1$s__", key);
+        StringBuilder sb = new StringBuilder();
+        sb.append("javascript:try{(function(){if(window.");
+        sb.append(obj);
+        sb.append("){console.log('");
+        sb.append(obj);
+        sb.append(" has been injected');return;}window.");
+        sb.append(obj);
+        sb.append("=true;");
+        sb.append(js);
+        sb.append("}())}catch(e){console.warn(e)}");
+        return sb.toString();
+    }
+
+    /**
+     * 构建一个“带try catch”的js脚本；
+     * @param js
+     * @return
+     */
+    public String buildTryCatchInjectJS(String js) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("javascript:try{");
+        sb.append(js);
+        sb.append("}catch(e){console.warn(e)}");
+        return sb.toString();
     }
 
     /**

@@ -36,13 +36,9 @@ public class JsCallJava {
             // getMethods会获得所有继承与非继承的方法
             Method[] methods = mInterfaceObj.getClass().getMethods();
             // 拼接的js脚本可参照备份文件：./library/doc/injected.js
-            StringBuilder sb = new StringBuilder("javascript:(function(b){if(typeof(b.");
+            StringBuilder sb = new StringBuilder("javascript:(function(b){console.log(\"");
             sb.append(mInterfacedName);
-            sb.append(")!='undefined'){console.log(\"");
-            sb.append(mInterfacedName);
-            sb.append(" is injected\");}else{console.log(\"");
-            sb.append(mInterfacedName);
-            sb.append(" initialization begin\");var a={queue:[],callback:function(){var d=Array.prototype.slice.call(arguments,0);var c=d.shift();var e=d.shift();this.queue[c].apply(this,d);if(!e){delete this.queue[c]}}};");
+            sb.append(" init begin\");var a={queue:[],callback:function(){var d=Array.prototype.slice.call(arguments,0);var c=d.shift();var e=d.shift();this.queue[c].apply(this,d);if(!e){delete this.queue[c]}}};");
             for (Method method : methods) {
                 String sign;
                 if ((sign = genJavaMethodSign(method)) == null) {
@@ -63,7 +59,7 @@ public class JsCallJava {
             sb.append(mInterfacedName);
             sb.append("=a;console.log(\"");
             sb.append(mInterfacedName);
-            sb.append(" initialization end\")}})(window);");
+            sb.append(" init end\")})(window)");
             mPreloadInterfaceJS = sb.toString();
             sb.setLength(0);
         } catch(Exception e){
