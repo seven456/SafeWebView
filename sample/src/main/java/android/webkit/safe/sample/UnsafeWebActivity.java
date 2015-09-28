@@ -4,14 +4,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.webkit.safe.SafeWebChromeClient;
-import android.webkit.safe.SafeWebView;
 
 public class UnsafeWebActivity extends Activity {
     public static final String HTML = "file:///android_asset/unsafe_test.html";
@@ -21,9 +17,11 @@ public class UnsafeWebActivity extends Activity {
         super.onCreate(savedInstanceState);
         WebView wv = new WebView(this);
         setContentView(wv);
-        WebSettings ws = wv.getSettings();
-        ws.setJavaScriptEnabled(true);
+
+        WebSettings webView = wv.getSettings();
+        webView.setJavaScriptEnabled(true);
         wv.setWebChromeClient(new InnerChromeClient());
+
         wv.loadUrl(HTML);
     }
 
