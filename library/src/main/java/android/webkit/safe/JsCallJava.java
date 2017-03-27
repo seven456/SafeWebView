@@ -25,7 +25,7 @@ public class JsCallJava {
     private String mInterfacedName;
     private String mPreloadInterfaceJS;
 
-    public JsCallJava (Object interfaceObj, String interfaceName) {
+    public JsCallJava(Object interfaceObj, String interfaceName) {
         try {
             if (TextUtils.isEmpty(interfaceName)) {
                 throw new Exception("injected name can not be null");
@@ -185,7 +185,7 @@ public class JsCallJava {
         }
     }
 
-    private String getReturn (JSONObject reqJson, int stateCode, Object result, long time) {
+    private String getReturn(JSONObject reqJson, int stateCode, Object result, long time) {
         String insertRes;
         if (result == null) {
             insertRes = "null";

@@ -1,5 +1,4 @@
-apply plugin: 'com.android.library'
-
+apply plugin: 'android-library'
 android {
     compileOptions.encoding = "UTF-8"
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -7,7 +6,7 @@ android {
 
     defaultConfig {
         minSdkVersion 9
-        targetSdkVersion 17
+        targetSdkVersion 19
     }
 
     lintOptions {

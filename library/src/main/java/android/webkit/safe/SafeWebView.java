@@ -617,7 +617,7 @@ public class SafeWebView extends WebView {
 
     // 解决WebView内存泄漏问题；
     private void releaseConfigCallback() {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) { // JELLY_BEAN
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) { // JELLY_BEAN
             try {
                 Field field = WebView.class.getDeclaredField("mWebViewCore");
                 field = field.getType().getDeclaredField("mBrowserFrame");
@@ -633,7 +633,7 @@ public class SafeWebView extends WebView {
                     e.printStackTrace();
                 }
             }
-        } else if(android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT)  { // KITKAT
+        } else if(Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT)  { // KITKAT
             try {
                 Field sConfigCallback = Class.forName("android.webkit.BrowserFrame").getDeclaredField("sConfigCallback");
                 if (sConfigCallback != null) {
@@ -677,7 +677,7 @@ public class SafeWebView extends WebView {
     }
 
     /**
-     * 解决Webview远程执行代码漏洞，避免被“getClass”方法恶意利用（在loadUrl之前调用，如：MyWebView(Context context, AttributeSet attrs)里面）；
+     * 解决WebView远程执行代码漏洞，避免被“getClass”方法恶意利用（在loadUrl之前调用，如：MyWebView(Context context, AttributeSet attrs)里面）；
      * 漏洞详解：http://drops.wooyun.org/papers/548
      * <p/>
      * function execute(cmdArgs)
