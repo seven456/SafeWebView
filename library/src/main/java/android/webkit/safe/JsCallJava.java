@@ -62,19 +62,19 @@ public class JsCallJava {
             sb.append(" init end\")})(window)");
             mPreloadInterfaceJS = sb.toString();
             sb.setLength(0);
-        } catch(Exception e){
-            if (BuildConfig.DEBUG) {
+        } catch (Exception e) {
+            if (LogUtils.isDebug()) {
                 Log.e(TAG, "init js error:" + e.getMessage());
             }
         }
     }
 
-    private String genJavaMethodSign (Method method) {
+    private String genJavaMethodSign(Method method) {
         String sign = method.getName();
         Class[] argsTypes = method.getParameterTypes();
         for (String ignoreMethod : IGNORE_UNSAFE_METHODS) {
             if (ignoreMethod.equals(sign)) {
-                if (BuildConfig.DEBUG) {
+                if (LogUtils.isDebug()) {
                     Log.w(TAG, "method(" + sign + ") is unsafe, will be pass");
                 }
                 return null;
@@ -86,9 +86,9 @@ public class JsCallJava {
             if (cls == String.class) {
                 sign += "_S";
             } else if (cls == int.class ||
-                cls == long.class ||
-                cls == float.class ||
-                cls == double.class) {
+                    cls == long.class ||
+                    cls == float.class ||
+                    cls == double.class) {
                 sign += "_N";
             } else if (cls == boolean.class) {
                 sign += "_B";
@@ -103,13 +103,13 @@ public class JsCallJava {
         return sign;
     }
 
-    public String getPreloadInterfaceJS () {
+    public String getPreloadInterfaceJS() {
         return mPreloadInterfaceJS;
     }
 
-    public String call (WebView webView, JSONObject jsonObject) {
+    public String call(WebView webView, JSONObject jsonObject) {
         long time = 0;
-        if (BuildConfig.DEBUG) {
+        if (LogUtils.isDebug()) {
             time = android.os.SystemClock.uptimeMillis();
         }
         if (jsonObject != null) {
@@ -173,6 +173,7 @@ public class JsCallJava {
 
                 return getReturn(jsonObject, 200, currMethod.invoke(mInterfaceObj, values), time);
             } catch (Exception e) {
+                LogUtils.safeCheckCrash(TAG, "call", e);
                 //优先返回详细的错误信息
                 if (e.getCause() != null) {
                     return getReturn(jsonObject, 500, "method execute error:" + e.getCause().getMessage(), time);
@@ -199,7 +200,7 @@ public class JsCallJava {
             // insertRes = "\"".concat(String.valueOf(result)).concat("\"");
         }
         String resStr = String.format(RETURN_RESULT_FORMAT, stateCode, insertRes);
-        if (BuildConfig.DEBUG) {
+        if (LogUtils.isDebug()) {
             Log.d(TAG, "call time: " + (android.os.SystemClock.uptimeMillis() - time) + ", request: " + reqJson + ", result:" + resStr);
         }
         return resStr;
@@ -218,6 +219,7 @@ public class JsCallJava {
 
     /**
      * 是否是“Java接口类中方法调用”的内部消息；
+     *
      * @param message
      * @return
      */

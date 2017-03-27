@@ -8,6 +8,7 @@ import android.webkit.JsPromptResult;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.safe.LogUtils;
 import android.webkit.safe.SafeWebView;
 
 public class WebActivity extends Activity {
@@ -28,6 +29,10 @@ public class WebActivity extends Activity {
         public InnerWebView(Context context) {
             super(context);
 
+            if (LogUtils.isDebug()) {
+                trySetWebDebuggEnabled();
+            }
+            fixedAccessibilityInjectorException();
             WebSettings ws = getSettings();
             ws.setJavaScriptEnabled(true);
             addJavascriptInterface(new JavaScriptInterface(this), "Android");

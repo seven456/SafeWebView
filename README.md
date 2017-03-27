@@ -1,9 +1,11 @@
 SafeWebView
 ===================
-解决2个问题：
+解决4个问题：
 
     1、WebView addJavascriptInterface安全漏洞问题；
     2、支持网页将JS函数（function）传到Java层，方便回调；
+    3、解决各种WebView的崩溃（附日志）；
+    4、WebView设置代理（对不同Android系统版本调用Java反射实现）；
 
 ![image](app-sample-screenshot.png)
 
